@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/webdav"
 
-	"github.com/dhcgn/age-fs/cmd/agefs"
+	"github.com/dhcgn/age-fs/agefs"
 	"github.com/sirupsen/logrus"
 )
 

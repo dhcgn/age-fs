@@ -1,11 +1,19 @@
-package agefs
+package file
 
 import (
 	"io"
 	"io/fs"
 
 	"github.com/sirupsen/logrus"
+	"golang.org/x/net/webdav"
 )
+
+func NewFile(logger *logrus.Entry, fi fs.FileInfo) webdav.File {
+	return file{
+		Logger:   logger,
+		FileInfo: fi,
+	}
+}
 
 type file struct {
 	Logger   *logrus.Entry
@@ -35,6 +43,7 @@ func (f file) Seek(offset int64, whence int) (int64, error) {
 // Readdir implements webdav.File
 func (f file) Readdir(count int) ([]fs.FileInfo, error) {
 	f.Logger.Debugln("Readdir", count)
+
 	return []fs.FileInfo{
 
 		fileinfo{

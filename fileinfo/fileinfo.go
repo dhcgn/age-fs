@@ -1,45 +1,53 @@
-package agefs
+package fileinfo
 
 import (
 	"io/fs"
+	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
+func NewFileInfo(logger *logrus.Entry, fsinternal os.FileInfo) fs.FileInfo {
+	return fileinfo{
+		Logger:     logger,
+		fsinternal: fsinternal,
+	}
+}
+
 type fileinfo struct {
-	Logger *logrus.Entry
-	isDir  bool
+	Logger     *logrus.Entry
+	fsinternal os.FileInfo
 }
 
 // IsDir implements fs.FileInfo
 func (fi fileinfo) IsDir() bool {
-	fi.Logger.Debugln("IsDir", fi.isDir)
-	return fi.isDir
+	fi.Logger.Debugln("IsDir", fi.fsinternal.IsDir())
+	return fi.fsinternal.IsDir()
 }
 
 // ModTime implements fs.FileInfo
 func (fi fileinfo) ModTime() time.Time {
 	fi.Logger.Debugln("ModTime")
-	return time.Now()
+	return fi.fsinternal.ModTime()
 }
 
 // Mode implements fs.FileInfo
 func (fi fileinfo) Mode() fs.FileMode {
 	fi.Logger.Debugln("Mode")
-	return fs.FileMode(0)
+	return fi.fsinternal.Mode()
 }
 
 // Name implements fs.FileInfo
 func (fi fileinfo) Name() string {
 	fi.Logger.Debugln("Name")
-	return "testfile"
+	return fi.fsinternal.Name()
 }
 
 // Size implements fs.FileInfo
 func (fi fileinfo) Size() int64 {
 	fi.Logger.Debugln("Size")
-	return int64(len("Hello"))
+	return fi.fsinternal.Size()
 }
 
 // Sys implements fs.FileInfo
