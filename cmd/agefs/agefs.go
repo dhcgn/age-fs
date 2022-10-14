@@ -1,6 +1,9 @@
 package agefs
 
-import "golang.org/x/net/webdav"
+import (
+	"github.com/sirupsen/logrus"
+	"golang.org/x/net/webdav"
+)
 
 // FS implements AgeFS
 func (agefs *agefs) FS() webdav.FileSystem {
@@ -14,10 +17,12 @@ type AgeFS interface {
 	FS() webdav.FileSystem
 }
 
-func NewFS(rootDir string) AgeFS {
+func NewFS(rootDir, privateKey string, log *logrus.Entry) AgeFS {
 	return &agefs{
 		fs: filesystem{
-			rootDir: rootDir,
+			rootDir:    rootDir,
+			privateKey: privateKey,
+			Logger:     log,
 		},
 	}
 }
