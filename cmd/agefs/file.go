@@ -35,7 +35,12 @@ func (f file) Seek(offset int64, whence int) (int64, error) {
 // Readdir implements webdav.File
 func (f file) Readdir(count int) ([]fs.FileInfo, error) {
 	f.Logger.Debugln("Readdir", count)
-	return nil, nil
+	return []fs.FileInfo{
+
+		fileinfo{
+			Logger: f.Logger,
+		},
+	}, nil
 }
 
 // Stat implements webdav.File
