@@ -3,6 +3,8 @@ package filesystem
 import (
 	"context"
 	"io/fs"
+	"strings"
+
 	"os"
 	"path"
 
@@ -38,13 +40,15 @@ func (fs filesystem) Mkdir(ctx context.Context, name string, perm fs.FileMode) e
 func (fs filesystem) OpenFile(ctx context.Context, name string, flag int, perm fs.FileMode) (webdav.File, error) {
 	fs.Logger.Debugln("OpenFile", name)
 
-	fiMounted, err := fs.Stat(ctx, path.Join(fs.rootDir, name))
+	name = strings.TrimPrefix(name, "/")
+	path := path.Join(fs.rootDir, name)
+	fiMounted, err := os.Stat(path)
 	if err != nil {
 		return nil, err
 	}
 
 	fi := fileinfo.NewFileInfo(fs.Logger.WithField("scope", "fileinfo"), fiMounted)
-	return file.NewFile(fs.Logger.WithField("scope", "file"), fi), nil
+	return file.NewFile(fs.Logger.WithField("scope", "file"), fi, path), nil
 }
 
 // RemoveAll implements webdav.FileSystem
@@ -63,7 +67,9 @@ func (fs filesystem) Rename(ctx context.Context, oldName string, newName string)
 func (fs filesystem) Stat(ctx context.Context, name string) (fs.FileInfo, error) {
 	fs.Logger.Debugln("Stat", name)
 
-	fiMounted, err := fs.Stat(ctx, path.Join(fs.rootDir, name))
+	name = strings.TrimPrefix(name, "/")
+
+	fiMounted, err := os.Stat(path.Join(fs.rootDir, name))
 	if err != nil {
 		return nil, err
 	}

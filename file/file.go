@@ -3,21 +3,26 @@ package file
 import (
 	"io"
 	"io/fs"
+	"os"
+	"path"
 
+	"github.com/dhcgn/age-fs/fileinfo"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/webdav"
 )
 
-func NewFile(logger *logrus.Entry, fi fs.FileInfo) webdav.File {
+func NewFile(logger *logrus.Entry, fi fs.FileInfo, path string) webdav.File {
 	return file{
 		Logger:   logger,
 		FileInfo: fi,
+		Path:     path,
 	}
 }
 
 type file struct {
 	Logger   *logrus.Entry
 	FileInfo fs.FileInfo
+	Path     string
 }
 
 // Close implements webdav.File
@@ -44,12 +49,22 @@ func (f file) Seek(offset int64, whence int) (int64, error) {
 func (f file) Readdir(count int) ([]fs.FileInfo, error) {
 	f.Logger.Debugln("Readdir", count)
 
-	return []fs.FileInfo{
+	dir, err := os.ReadDir(f.Path)
+	if err != nil {
+		return nil, err
+	}
 
-		fileinfo{
-			Logger: f.Logger,
-		},
-	}, nil
+	var fis []fs.FileInfo
+	for _, fi := range dir {
+		p, err := os.Stat(path.Join(f.Path, fi.Name()))
+		if err != nil {
+			continue
+		}
+
+		fis = append(fis, fileinfo.NewFileInfo(f.Logger, p))
+	}
+
+	return fis, nil
 }
 
 // Stat implements webdav.File

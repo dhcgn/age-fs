@@ -19,5 +19,7 @@ type AgeFS interface {
 }
 
 func NewFS(rootDir, privateKey string, log *logrus.Entry) AgeFS {
-	return filesystem.NewFileSystem(rootDir, privateKey, log)
+	return &agefs{
+		fs: filesystem.NewFileSystem(rootDir, privateKey, log),
+	}
 }
