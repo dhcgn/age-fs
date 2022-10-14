@@ -1,17 +1,33 @@
-package agefs
+package filesystem
 
 import (
 	"context"
 	"io/fs"
+	"strings"
 
+	"os"
+	"path"
+
+	"github.com/dhcgn/age-fs/file"
+	"github.com/dhcgn/age-fs/fileinfo"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/webdav"
 )
+
+func NewFileSystem(rootDir, privateKey string, logger *logrus.Entry) webdav.FileSystem {
+	return filesystem{
+		rootDir:    rootDir,
+		privateKey: privateKey,
+		Logger:     logger,
+		fsinternal: os.DirFS(rootDir),
+	}
+}
 
 type filesystem struct {
 	rootDir    string
 	privateKey string
 	Logger     *logrus.Entry
+	fsinternal fs.FS
 }
 
 // Mkdir implements webdav.FileSystem
@@ -24,23 +40,15 @@ func (fs filesystem) Mkdir(ctx context.Context, name string, perm fs.FileMode) e
 func (fs filesystem) OpenFile(ctx context.Context, name string, flag int, perm fs.FileMode) (webdav.File, error) {
 	fs.Logger.Debugln("OpenFile", name)
 
-	var fi fileinfo
-	if name == "/" {
-		fi = fileinfo{
-			isDir:  true,
-			Logger: fs.Logger.WithField("scope", "fileinfo"),
-		}
-	} else {
-		fi = fileinfo{
-			isDir:  false,
-			Logger: fs.Logger.WithField("scope", "fileinfo"),
-		}
+	name = strings.TrimPrefix(name, "/")
+	path := path.Join(fs.rootDir, name)
+	fiMounted, err := os.Stat(path)
+	if err != nil {
+		return nil, err
 	}
 
-	return file{
-		Logger:   fs.Logger.WithField("scope", "file"),
-		FileInfo: fi,
-	}, nil
+	fi := fileinfo.NewFileInfo(fs.Logger.WithField("scope", "fileinfo"), fiMounted)
+	return file.NewFile(fs.Logger.WithField("scope", "file"), fi, path), nil
 }
 
 // RemoveAll implements webdav.FileSystem
@@ -59,14 +67,13 @@ func (fs filesystem) Rename(ctx context.Context, oldName string, newName string)
 func (fs filesystem) Stat(ctx context.Context, name string) (fs.FileInfo, error) {
 	fs.Logger.Debugln("Stat", name)
 
-	if name == "/" {
-		return fileinfo{
-			Logger: fs.Logger.WithField("scope", "fileinfo"),
-			isDir:  true,
-		}, nil
-	}
+	name = strings.TrimPrefix(name, "/")
 
-	return fileinfo{
-		Logger: fs.Logger.WithField("scope", "fileinfo"),
-	}, nil
+	fiMounted, err := os.Stat(path.Join(fs.rootDir, name))
+	if err != nil {
+		return nil, err
+	}
+	fi := fileinfo.NewFileInfo(fs.Logger.WithField("scope", "fileinfo"), fiMounted)
+
+	return fi, nil
 }
