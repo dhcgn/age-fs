@@ -1,7 +1,6 @@
 package file
 
 import (
-	"io"
 	"io/fs"
 	"os"
 	"path"
@@ -12,10 +11,16 @@ import (
 )
 
 func NewFile(logger *logrus.Entry, fi fs.FileInfo, path string) webdav.File {
+	osFile, err := os.Open(path)
+	if err != nil {
+		logger.Error(err)
+	}
+
 	return file{
 		Logger:   logger,
 		FileInfo: fi,
 		Path:     path,
+		osFile:   osFile,
 	}
 }
 
@@ -23,26 +28,26 @@ type file struct {
 	Logger   *logrus.Entry
 	FileInfo fs.FileInfo
 	Path     string
+	osFile   *os.File
 }
 
 // Close implements webdav.File
 func (f file) Close() error {
 	f.Logger.Debugln("Close")
-	return nil
+	return f.osFile.Close()
 }
 
 // Read implements webdav.File
 func (f file) Read(p []byte) (n int, err error) {
 	f.Logger.Debugln("Read")
-	data := []byte("Hello")
-	copy(p, data)
-	return len(data), io.EOF
+	return f.osFile.Read(p)
 }
 
 // Seek implements webdav.File
 func (f file) Seek(offset int64, whence int) (int64, error) {
-	f.Logger.Debug("Seek", offset, whence)
-	return 0, nil
+	f.Logger.WithField("offset", offset).WithField("whence", whence).Debugln("Seek")
+
+	return f.osFile.Seek(offset, whence)
 }
 
 // Readdir implements webdav.File
@@ -76,5 +81,6 @@ func (f file) Stat() (fs.FileInfo, error) {
 // Write implements webdav.File
 func (f file) Write(p []byte) (n int, err error) {
 	f.Logger.Debugln("Write", len(p), "bytes")
-	return 0, nil
+
+	return f.osFile.Write(p)
 }

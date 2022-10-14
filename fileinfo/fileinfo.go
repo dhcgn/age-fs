@@ -22,31 +22,31 @@ type fileinfo struct {
 
 // IsDir implements fs.FileInfo
 func (fi fileinfo) IsDir() bool {
-	fi.Logger.Debugln("IsDir", fi.fsinternal.IsDir())
+	fi.Logger.WithField("result", fi.fsinternal.IsDir()).Debugln("IsDir")
 	return fi.fsinternal.IsDir()
 }
 
 // ModTime implements fs.FileInfo
 func (fi fileinfo) ModTime() time.Time {
-	fi.Logger.Debugln("ModTime")
+	fi.Logger.WithField("result", fi.fsinternal.ModTime()).Debugln("ModTime")
 	return fi.fsinternal.ModTime()
 }
 
 // Mode implements fs.FileInfo
 func (fi fileinfo) Mode() fs.FileMode {
-	fi.Logger.Debugln("Mode")
+	fi.Logger.WithField("result", fi.fsinternal.Mode()).Debugln("Mode")
 	return fi.fsinternal.Mode()
 }
 
 // Name implements fs.FileInfo
 func (fi fileinfo) Name() string {
-	fi.Logger.Debugln("Name")
+	fi.Logger.WithField("result", fi.fsinternal.Name()).Debugln("Name")
 	return fi.fsinternal.Name()
 }
 
 // Size implements fs.FileInfo
 func (fi fileinfo) Size() int64 {
-	fi.Logger.Debugln("Size")
+	fi.Logger.WithField("result", fi.fsinternal.Size()).Debugln("Size")
 	return fi.fsinternal.Size()
 }
 
