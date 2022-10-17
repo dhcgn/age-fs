@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/webdav"
 
-	"github.com/dhcgn/age-fs/agefs"
+	"github.com/dhcgn/age-fs/mywebdav"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,10 +23,8 @@ var (
 func main() {
 	logger.Level = logrus.DebugLevel
 
-	a := agefs.NewFS(testFolder, testPrivatKey, logger.WithField("scope", "FS"))
-
 	handler := &webdav.Handler{
-		FileSystem: a.FS(),
+		FileSystem: mywebdav.Dir(testFolder),
 		LockSystem: webdav.NewMemLS(),
 		Logger: func(r *http.Request, err error) {
 			log.Debugln(r.Method, r.URL.Path)
