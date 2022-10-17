@@ -10,74 +10,82 @@ import (
 	"golang.org/x/net/webdav"
 )
 
-// A Dir implements FileSystem using the native file system restricted to a
+// A FS implements FileSystem using the native file system restricted to a
 // specific directory tree.
 //
-// While the FileSystem.OpenFile method takes '/'-separated paths, a Dir's
+// While the FileSystem.OpenFile method takes '/'-separated paths, a FS's
 // string value is a filename on the native file system, not a URL, so it is
 // separated by filepath.Separator, which isn't necessarily '/'.
 //
-// An empty Dir is treated as ".".
-type Dir string
+// An empty FS is treated as ".".
+type FS struct {
+	Dir string
+}
 
-func (d Dir) resolve(name string) string {
+func NewFileSystem(dir string) FS {
+	return FS{
+		Dir: dir,
+	}
+}
+
+func (f FS) resolve(name string) string {
 	// This implementation is based on Dir.Open's code in the standard net/http package.
 	if filepath.Separator != '/' && strings.IndexRune(name, filepath.Separator) >= 0 ||
 		strings.Contains(name, "\x00") {
 		return ""
 	}
-	dir := string(d)
+	dir := f.Dir
 	if dir == "" {
 		dir = "."
 	}
 	return filepath.Join(dir, filepath.FromSlash(slashClean(name)))
 }
 
-func (d Dir) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
-	if name = d.resolve(name); name == "" {
+func (f FS) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
+	if name = f.resolve(name); name == "" {
 		return os.ErrNotExist
 	}
 	return os.Mkdir(name, perm)
 }
 
-func (d Dir) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
-	if name = d.resolve(name); name == "" {
+func (f FS) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
+	if name = f.resolve(name); name == "" {
 		return nil, os.ErrNotExist
 	}
-	f, err := os.OpenFile(name, flag, perm)
+	file, err := os.OpenFile(name, flag, perm)
 	if err != nil {
 		return nil, err
 	}
-	return f, nil
+	return file, nil
 }
 
-func (d Dir) RemoveAll(ctx context.Context, name string) error {
-	if name = d.resolve(name); name == "" {
+func (f FS) RemoveAll(ctx context.Context, name string) error {
+	if name = f.resolve(name); name == "" {
 		return os.ErrNotExist
 	}
-	if name == filepath.Clean(string(d)) {
+	if name == filepath.Clean(f.Dir) {
 		// Prohibit removing the virtual root directory.
 		return os.ErrInvalid
 	}
 	return os.RemoveAll(name)
 }
 
-func (d Dir) Rename(ctx context.Context, oldName, newName string) error {
-	if oldName = d.resolve(oldName); oldName == "" {
+func (f FS) Rename(ctx context.Context, oldName, newName string) error {
+	if oldName = f.resolve(oldName); oldName == "" {
 		return os.ErrNotExist
 	}
-	if newName = d.resolve(newName); newName == "" {
+	if newName = f.resolve(newName); newName == "" {
 		return os.ErrNotExist
 	}
-	if root := filepath.Clean(string(d)); root == oldName || root == newName {
+	if root := filepath.Clean(f.Dir); root == oldName || root == newName {
 		// Prohibit renaming from or to the virtual root directory.
 		return os.ErrInvalid
 	}
 	return os.Rename(oldName, newName)
 }
 
-func (d Dir) Stat(ctx context.Context, name string) (os.FileInfo, error) {
-	if name = d.resolve(name); name == "" {
+func (f FS) Stat(ctx context.Context, name string) (os.FileInfo, error) {
+	if name = f.resolve(name); name == "" {
 		return nil, os.ErrNotExist
 	}
 	return os.Stat(name)

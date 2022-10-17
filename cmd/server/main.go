@@ -24,7 +24,7 @@ func main() {
 	logger.Level = logrus.DebugLevel
 
 	handler := &webdav.Handler{
-		FileSystem: mywebdav.Dir(testFolder),
+		FileSystem: mywebdav.NewFileSystem(testFolder),
 		LockSystem: webdav.NewMemLS(),
 		Logger: func(r *http.Request, err error) {
 			log.Debugln(r.Method, r.URL.Path)
