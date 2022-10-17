@@ -13,11 +13,11 @@ import (
 // A FS implements FileSystem using the native file system restricted to a
 // specific directory tree.
 //
-// While the FileSystem.OpenFile method takes '/'-separated paths, a FS's
+// While the FileSystem.OpenFile method takes '/'-separated paths, a Dir's
 // string value is a filename on the native file system, not a URL, so it is
 // separated by filepath.Separator, which isn't necessarily '/'.
 //
-// An empty FS is treated as ".".
+// An empty Dir is treated as ".".
 type FS struct {
 	Dir string
 }
