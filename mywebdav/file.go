@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"filippo.io/age"
+	"github.com/dhcgn/age-fs/agefsfile"
 	"golang.org/x/net/webdav"
 )
 
@@ -19,12 +21,14 @@ import (
 //
 // An empty Dir is treated as ".".
 type FS struct {
-	Dir string
+	Dir      string
+	Identity *age.X25519Identity
 }
 
-func NewFileSystem(dir string) FS {
+func NewFileSystem(dir string, identity *age.X25519Identity) FS {
 	return FS{
-		Dir: dir,
+		Dir:      dir,
+		Identity: identity,
 	}
 }
 
@@ -52,10 +56,16 @@ func (f FS) OpenFile(ctx context.Context, name string, flag int, perm os.FileMod
 	if name = f.resolve(name); name == "" {
 		return nil, os.ErrNotExist
 	}
+
+	if strings.HasSuffix(name, ".age") {
+		return agefsfile.New(name, f.Identity), nil
+	}
+
 	file, err := os.OpenFile(name, flag, perm)
 	if err != nil {
 		return nil, err
 	}
+
 	return file, nil
 }
 

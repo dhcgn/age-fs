@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"filippo.io/age"
 	"golang.org/x/net/webdav"
 
 	"github.com/dhcgn/age-fs/mywebdav"
@@ -12,7 +13,7 @@ import (
 
 const (
 	testFolder    = `c:\temp\agefs`
-	testPrivatKey = `AGE-SECRET-KEY-1JWDD9FJHFULZMXPJWXVP2WX6J9KU9700HGCA72YH509NQXED6VXS8MLZJ4`
+	testPrivatKey = `AGE-SECRET-KEY-102GRTMGVJH4NGJ2JYUPN2TLMFT4CGK33LKAZ5AWF30C25LFAU44SMZLGTN`
 )
 
 var (
@@ -23,8 +24,13 @@ var (
 func main() {
 	logger.Level = logrus.DebugLevel
 
+	i, err := age.ParseX25519Identity(testPrivatKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	handler := &webdav.Handler{
-		FileSystem: mywebdav.NewFileSystem(testFolder),
+		FileSystem: mywebdav.NewFileSystem(testFolder, i),
 		LockSystem: webdav.NewMemLS(),
 		Logger: func(r *http.Request, err error) {
 			log.Debugln(r.Method, r.URL.Path)
