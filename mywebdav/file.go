@@ -2,13 +2,13 @@ package mywebdav
 
 import (
 	"context"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"filippo.io/age"
-	"github.com/dhcgn/age-fs/agefsfile"
 	"golang.org/x/net/webdav"
 )
 
@@ -57,9 +57,11 @@ func (f FS) OpenFile(ctx context.Context, name string, flag int, perm os.FileMod
 		return nil, os.ErrNotExist
 	}
 
-	if strings.HasSuffix(name, ".age") {
-		return agefsfile.New(name, f.Identity), nil
-	}
+	log.Printf("OpenFile %v f:%v p:%v", name, flag, perm)
+
+	// if strings.HasSuffix(name, ".age") {
+	// 	return agefsfile.New(name, f.Identity), nil
+	// }
 
 	file, err := os.OpenFile(name, flag, perm)
 	if err != nil {
