@@ -48,7 +48,7 @@ func TestNew_New_CreateNewFile(t *testing.T) {
 	}
 
 	h := encryptedContent[:len(ageencryption.EncryptedFileHeader)]
-	if !reflect.DeepEqual(h, ageencryption.EncryptedFileHeader) {
+	if string(h) != ageencryption.EncryptedFileHeader {
 		r, _ := regexp.Compile("[a-zA-Z0-9]+")
 		h = r.Find(h)
 		t.Errorf("encrypted file header is not correct: '%s', excepted %v", h, ageencryption.EncryptedFileHeader)

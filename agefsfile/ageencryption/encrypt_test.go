@@ -11,7 +11,7 @@ import (
 
 func TestEncrypt(t *testing.T) {
 	type args struct {
-		pt io.WriterTo
+		pt io.Reader
 		r  age.Recipient
 	}
 	tests := []struct {

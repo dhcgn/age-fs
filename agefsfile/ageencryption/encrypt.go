@@ -6,13 +6,17 @@ import (
 	"filippo.io/age"
 )
 
-func Encrypt(pt io.WriterTo, ct io.Writer, r age.Recipient) error {
+func Encrypt(pt io.Reader, ct io.Writer, r age.Recipient) error {
 	wc, err := age.Encrypt(ct, r)
 	if err != nil {
 		return err
 	}
+	defer wc.Close()
 
-	pt.WriteTo(wc)
+	_, err = io.Copy(wc, pt)
+	if err != nil {
+		return err
+	}
 
 	return err
 }

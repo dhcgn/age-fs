@@ -17,7 +17,7 @@ var (
 
 type agefsfile struct {
 	PlainContent      []byte
-	PlainBuffer       bytes.Buffer
+	PlainBuffer       *bytes.Buffer
 	PlainReader       *bytes.Reader
 	EncryptedFilePath string
 	id                *age.X25519Identity
@@ -31,7 +31,7 @@ func (af *agefsfile) Close() error {
 		return err
 	}
 	defer f.Close()
-	ageencryption.Encrypt(&af.PlainBuffer, f, af.id.Recipient())
+	ageencryption.Encrypt(af.PlainReader, f, af.id.Recipient())
 
 	return err
 }
@@ -59,7 +59,12 @@ func (a *agefsfile) Stat() (fs.FileInfo, error) {
 
 // Write implements webdav.File
 func (af *agefsfile) Write(p []byte) (n int, err error) {
-	return af.PlainBuffer.Write(p)
+	n, err = af.PlainBuffer.Write(p)
+	if err != nil {
+		return 0, err
+	}
+	af.PlainReader = bytes.NewReader(af.PlainBuffer.Bytes())
+	return n, err
 }
 
 func New(name string, flag int, perm os.FileMode, id *age.X25519Identity) (*agefsfile, error) {
@@ -83,6 +88,8 @@ func New(name string, flag int, perm os.FileMode, id *age.X25519Identity) (*agef
 
 		af.PlainBuffer.Write(pt)
 		af.info = NewFileInfo(stats, name, int64(af.PlainBuffer.Len()))
+	} else {
+		af.PlainBuffer = bytes.NewBuffer([]byte{})
 	}
 
 	af.PlainReader = bytes.NewReader(af.PlainBuffer.Bytes())
