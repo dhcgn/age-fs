@@ -12,32 +12,40 @@ var (
 )
 
 type agefsfileFileInfo struct {
-	name    string      // base name of the file
-	size    int64       // length in bytes for regular files; system-dependent for others
-	mode    os.FileMode // file mode bits
-	modTime time.Time   // modification time
-	isDir   bool        // abbreviation for Mode().IsDir()
-	sys     any         // underlying data source (can return nil)
+	fi      os.FileInfo
+	newname string
+	size    int64
+}
+
+func NewFileInfo(fi os.FileInfo, newname string, size int64) agefsfileFileInfo {
+	return agefsfileFileInfo{
+		fi:      fi,
+		newname: newname,
+		size:    size,
+	}
+}
+func (a *agefsfileFileInfo) FileInfo() os.FileInfo {
+	return a
 }
 
 // IsDir implements fs.FileInfo
 func (a *agefsfileFileInfo) IsDir() bool {
-	return a.isDir
+	return a.fi.IsDir()
 }
 
 // ModTime implements fs.FileInfo
 func (a *agefsfileFileInfo) ModTime() time.Time {
-	return a.modTime
+	return a.fi.ModTime()
 }
 
 // Mode implements fs.FileInfo
 func (a *agefsfileFileInfo) Mode() fs.FileMode {
-	return a.mode
+	return a.fi.Mode()
 }
 
 // Name implements fs.FileInfo
 func (a *agefsfileFileInfo) Name() string {
-	return a.name
+	return a.newname
 }
 
 // Size implements fs.FileInfo
@@ -47,5 +55,5 @@ func (a *agefsfileFileInfo) Size() int64 {
 
 // Sys implements fs.FileInfo
 func (a *agefsfileFileInfo) Sys() any {
-	return a.sys
+	return a.fi.Sys()
 }

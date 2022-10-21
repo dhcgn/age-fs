@@ -7,7 +7,7 @@ import (
 	"filippo.io/age"
 	"golang.org/x/net/webdav"
 
-	"github.com/dhcgn/age-fs/mywebdav"
+	"github.com/dhcgn/age-fs/webdavfilesystem"
 	"github.com/sirupsen/logrus"
 )
 
@@ -30,7 +30,7 @@ func main() {
 	}
 
 	handler := &webdav.Handler{
-		FileSystem: mywebdav.NewFileSystem(testFolder, i),
+		FileSystem: webdavfilesystem.NewFileSystem(testFolder, i),
 		LockSystem: webdav.NewMemLS(),
 		Logger: func(r *http.Request, err error) {
 			log.Debugln(r.Method, r.URL.Path)

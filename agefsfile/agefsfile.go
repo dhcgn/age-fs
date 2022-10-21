@@ -68,13 +68,10 @@ func New(name string, flag int, perm os.FileMode, id *age.X25519Identity) (*agef
 	af := &agefsfile{
 		EncryptedFilePath: path,
 		id:                id,
-		info: agefsfileFileInfo{
-			name: name,
-		},
 	}
 
 	// Encrypted existing file
-	if _, err := os.Stat(path); err == nil {
+	if stats, err := os.Stat(path); err == nil {
 		f, err := os.Open(path)
 		if err != nil {
 			return nil, err
@@ -85,6 +82,7 @@ func New(name string, flag int, perm os.FileMode, id *age.X25519Identity) (*agef
 		}
 
 		af.PlainBuffer.Write(pt)
+		af.info = NewFileInfo(stats, name, int64(af.PlainBuffer.Len()))
 	}
 
 	af.PlainReader = bytes.NewReader(af.PlainBuffer.Bytes())

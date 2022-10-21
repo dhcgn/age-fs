@@ -1,4 +1,4 @@
-package mywebdav
+package webdavfilesystem
 
 import (
 	"context"
@@ -10,6 +10,13 @@ import (
 
 	"filippo.io/age"
 	"golang.org/x/net/webdav"
+
+	"github.com/dhcgn/age-fs/webdavfilesystem/filewrapper"
+)
+
+// Interface guards
+var (
+	_ webdav.FileSystem = (*FS)(nil)
 )
 
 // A FS implements FileSystem using the native file system restricted to a
@@ -34,7 +41,7 @@ func NewFileSystem(dir string, identity *age.X25519Identity) FS {
 
 func (f FS) resolve(name string) string {
 	// This implementation is based on Dir.Open's code in the standard net/http package.
-	if filepath.Separator != '/' && strings.IndexRune(name, filepath.Separator) >= 0 ||
+	if filepath.Separator != '/' && strings.ContainsRune(name, filepath.Separator) ||
 		strings.Contains(name, "\x00") {
 		return ""
 	}
@@ -68,7 +75,9 @@ func (f FS) OpenFile(ctx context.Context, name string, flag int, perm os.FileMod
 		return nil, err
 	}
 
-	return file, nil
+	fw := filewrapper.NewFile(file)
+
+	return fw, nil
 }
 
 func (f FS) RemoveAll(ctx context.Context, name string) error {
